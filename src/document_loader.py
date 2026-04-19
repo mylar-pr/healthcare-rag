@@ -1,20 +1,55 @@
+import csv
+import json
 from pathlib import Path
 from typing import List
-from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
+from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader, BSHTMLLoader
+from langchain_core.documents import Document
 
-def load_documents(data_dir: str = "data/raw") -> List:
+
+def load_documents(data_dir: str = "data/raw") -> List[Document]:
     data_path = Path(data_dir)
     documents = []
     for file_path in data_path.rglob("*"):
-        if file_path.suffix.lower() == ".pdf":
-            loader = PyPDFLoader(str(file_path))
-            docs = loader.load()
+        suffix = file_path.suffix.lower()
+        try:
+            if suffix == ".pdf":
+                docs = PyPDFLoader(str(file_path)).load()
+            elif suffix in (".docx", ".doc"):
+                docs = UnstructuredWordDocumentLoader(str(file_path)).load()
+            elif suffix == ".txt":
+                text = file_path.read_text(encoding="utf-8")
+                docs = [Document(page_content=text, metadata={"source": file_path.name})]
+            elif suffix == ".html":
+                docs = BSHTMLLoader(str(file_path)).load()
+            elif suffix == ".csv":
+                docs = _load_csv(file_path)
+            elif suffix == ".json":
+                docs = _load_json(file_path)
+            else:
+                continue
             documents.extend(docs)
-        elif file_path.suffix.lower() in [".docx", ".doc"]:
-            loader = UnstructuredWordDocumentLoader(str(file_path))
-            docs = loader.load()
-            documents.extend(docs)
+        except Exception as e:
+            print(f"  Warning: could not load {file_path.name}: {e}")
     return documents
+
+
+def _load_csv(file_path: Path) -> List[Document]:
+    docs = []
+    with open(file_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            content = "\n".join(f"{k}: {v}" for k, v in row.items())
+            docs.append(Document(page_content=content, metadata={"source": file_path.name, "row": i}))
+    return docs
+
+
+def _load_json(file_path: Path) -> List[Document]:
+    data = json.loads(file_path.read_text(encoding="utf-8"))
+    items = data if isinstance(data, list) else [data]
+    return [
+        Document(page_content=json.dumps(item, indent=2), metadata={"source": file_path.name, "index": i})
+        for i, item in enumerate(items)
+    ]
 
 SAMPLE_DOCUMENTS = [
     {
