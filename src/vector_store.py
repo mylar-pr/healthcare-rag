@@ -7,6 +7,9 @@ PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "data/chroma_db")
 
 
 def build_vector_store(chunks: List[Document], embedder) -> Chroma:
+    import shutil, pathlib
+    if pathlib.Path(PERSIST_DIR).exists():
+        shutil.rmtree(PERSIST_DIR)
     return Chroma.from_documents(chunks, embedder, persist_directory=PERSIST_DIR)
 
 
