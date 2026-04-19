@@ -18,8 +18,8 @@ flowchart LR
     Q --> H
     H --> A2[Answer]
 
-    style E fill:#f0f4ff,stroke:#4a6cf7
-    style A2 fill:#e6ffed,stroke:#2da44e
+    style E fill:#1a1aff,stroke:#0000cc,color:#ffffff
+    style A2 fill:#1a7f37,stroke:#116329,color:#ffffff
 ```
 
 ## Features
