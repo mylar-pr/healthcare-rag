@@ -2,6 +2,26 @@
 
 A local-first Retrieval-Augmented Generation (RAG) pipeline for querying healthcare benefits documents — built with LangChain, HuggingFace embeddings, and Chroma vector store.
 
+## Pipeline
+
+```mermaid
+flowchart LR
+    A[Documents\nPDF / DOCX / Sample] --> B[document_loader.py]
+    B --> C[chunker.py\nRecursiveCharacterTextSplitter]
+    C --> D[embedder.py\nHuggingFace / OpenAI]
+    D --> E[(vector_store.py\nChroma DB)]
+
+    Q[User Question] --> F[embedder.py]
+    F --> G[retriever.py\nSimilarity Search top-k]
+    E --> G
+    G --> H[generator.py\nLocal / GPT-4o-mini]
+    Q --> H
+    H --> A2[Answer]
+
+    style E fill:#f0f4ff,stroke:#4a6cf7
+    style A2 fill:#e6ffed,stroke:#2da44e
+```
+
 ## Features
 
 - Runs fully offline using `sentence-transformers/all-MiniLM-L6-v2`
